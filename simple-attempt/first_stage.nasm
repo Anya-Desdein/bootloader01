@@ -2,33 +2,39 @@
 
 [org 0x7c00]
 jmp word 0x0000:start
+	align 2
+	message:	db 0x41, 0x0c
+	localization:	db 0x00, 0xb8
+	localization2:	db 0x02, 0x00, 0x00, 0xb8
+
+; Putchar:
+; ax: character itself
+; bx: localization in the VGA buffer - starts at 0xB8000
+putchar:
+	mov fs, bx
+	mov [fs:di], ax
+	ret
+
+
+puts:
+	
 
 start:
 	mov ah, 0x00 ; Set video mode
 	mov al, 0x03 ; Set text mode
 	int 0x10
 
-; TODO: Write puts function
-	mov ax, 0x0c41
-	mov bx, 0xb800
-	mov fs, bx
-	xor di, di
-	mov [fs:di], ax
+; Putchar to console like mov di a call putchar
+; Puts take pointer and prints until eo string add newline at the end
 
-	mov ax, 0x1f42
-	mov bx, 0xb800
-	mov fs, bx
-	xor di, di
-	mov di, 2
-	mov [fs:di], ax
 
-	mov ax, 0x0a43
-	mov bx, 0xb800
-	mov fs, bx
-	xor di, di
-	mov di, 4
-	mov [fs:di], ax
+	mov ax, [message]
+	mov bx, [localization]
+	call putchar
 
+	mov bx, [localization2+2]
+	mov di, [localization2]
+	call putchar
 L0:
 	pause
 	jmp L0
