@@ -4,17 +4,24 @@
 jmp word 0x0000:start
 	align 2
 	message:	db 0x41, 0x0c
-	localization:	db 0x00, 0xb8
-	localization2:	db 0x02, 0x00, 0x00, 0xb8
+	console_loc:	db 0x00, 0x00
 
 ; Putchar:
 ; ax: character itself
-; bx: localization in the VGA buffer - starts at 0xB8000
+; bx: offset from the VGA buffer - starts at 0xB8000
 putchar:
-	mov fs, bx
-	mov [fs:di], ax
-	ret
+	mov di, 0xB800
+	mov fs, di
 
+	mov di, [console_loc]
+	
+	mov [fs:di], ax
+	
+
+	add di, 2
+	mov [console_loc], di
+	
+	ret
 
 puts:
 	
@@ -29,11 +36,8 @@ start:
 
 
 	mov ax, [message]
-	mov bx, [localization]
 	call putchar
 
-	mov bx, [localization2+2]
-	mov di, [localization2]
 	call putchar
 L0:
 	pause
