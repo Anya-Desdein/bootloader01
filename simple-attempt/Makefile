@@ -7,7 +7,7 @@ first_stage.o: first_stage.nasm
 	nasm $< -o $@
 
 run: floppy.bin
-	qemu-system-x86_64 -drive file=floppy.bin,format=raw -cpu host -enable-kvm -no-reboot -no-shutdown -d int,cpu_reset,pcall -s -S
+	qemu-system-x86_64 -drive file=floppy.bin,format=raw -cpu host -enable-kvm -no-reboot -no-shutdown -d int,cpu_reset,pcall
 
 clean:
 	rm -f first_stage.o

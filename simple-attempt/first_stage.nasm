@@ -4,13 +4,29 @@
 jmp word 0x0000:start
 	align 2
 	vga_text_base	equ 0xB800
+	lwidth_terminal	equ 0x0A0
+
 	curr_terminal:	db 0x00, 0x00
 
 	message:	db 0x41, 0x41, 0x00
 	message2:	db 0x69, 0x42, 0x00
 
 pawel_jumper:
-	add [curr_terminal], 160
+	
+	mov bl, al
+	mov ax, [curr_terminal]
+	mov cx, lwidth_terminal
+	mov dx, 0
+	div cx
+
+	xor ax, ax
+	mov bl, al
+
+	xor cx, cx
+	mov cx, lwidth_terminal
+	sub cx, dx
+	add [curr_terminal], cx
+
 	ret
 
 ; Putchar:
@@ -50,6 +66,9 @@ start:
 	mov ds, si
 	mov si, message
 	call puts
+	mov si, message2
+	call puts
+
 	mov si, message2
 	call puts
 
