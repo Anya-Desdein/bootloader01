@@ -59,7 +59,7 @@ puts:
 
 start:
 	mov ah, 0x00 ; Set video mode
-	mov al, 0x02 ; Set text mode
+	mov al, 0x03 ; Set text mode
 	int 0x10
 
 	mov si, 0
