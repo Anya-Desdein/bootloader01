@@ -4,25 +4,84 @@
 jmp word 0x0000:start
 	align 2
 	vga_text_base	equ 0xB800
+
 	lwidth_terminal	equ 0x0A0
+	rcount_terminal equ 0x019
 
 	curr_terminal:	db 0x00, 0x00
 
 	message:	db 0x41, 0x41, 0x00
 	message2:	db 0x69, 0x42, 0x00
+	mrep:		db 0x00
+
+scroll_up:
+
+	; Method 1: scroll using rep movsw
+	xor dx, dx
+	mov dx, 1
+
+	; Src and destination
+	mov ax, 0xB800
+	mov ds, ax
+	mov es, ax
+
+	; Direction
+	std
+
+	; Src and dest pointers
+	mov di, lwidth_terminal
+	sub di, 2
+	mov si, di
+	add si, lwidth_terminal
+
+repeat:
+
+	mov cx, lwidth_terminal
+	rep movsw
+
+	add dx, 1
+	add di, lwidth_terminal
+	add si, lwidth_terminal
+
+	cmp dx, rcount_terminal
+	jne repeat
+
+	cld
+	
+	; Clearl last line
+	push ax
+	mov ax, 0x20
+	
+	mov di, si
+	add di, 2
+
+	rep stosb
+
+	pop ax
+
+	ret
+
 
 pawel_jumper:
 	
+	; Div uses ax for dividend
 	mov bl, al
 	mov ax, [curr_terminal]
+
+
 	mov cx, lwidth_terminal
 	mov dx, 0
 	div cx
+
+	; Check if terminal has to move
+	cmp ax, rcount_terminal
+	ja scroll_up
 
 	; Bring back al
 	xor ax, ax
 	mov bl, al
 
+	; Move position to newline
 	sub cx, dx
 	add [curr_terminal], cx
 
@@ -65,13 +124,19 @@ start:
 	mov ds, si
 	mov si, message
 	call puts
+	
+repeats:
+	inc word [mrep]
+	; bug here
 	mov si, message2
 	call puts
+	cmp word [mrep], 25
+	jl repeats
 
-	mov si, message2
+	mov si, message
 	call puts
 
-L0:
+	L0:
 	pause
 	jmp L0
 
