@@ -19,11 +19,10 @@ pawel_jumper:
 	mov dx, 0
 	div cx
 
+	; Bring back al
 	xor ax, ax
 	mov bl, al
 
-	xor cx, cx
-	mov cx, lwidth_terminal
 	sub cx, dx
 	add [curr_terminal], cx
 
