@@ -8,9 +8,13 @@ jmp word 0x0000:start
 	lwidth_terminal	equ 0x0A0
 	rcount_terminal equ 0x019
 	full_terminal	equ lwidth_terminal*rcount_terminal
-	rchlf		equ rcount_terminal/2
 
+	line_counter:	db 0x00, 0x01
 	curr_terminal:	db 0x00, 0x00
+
+	read_terminal_src:  db 0x00, 0xA0
+	read_terminal_dest: db 0x00, 0x00
+	read_terminal_ctr:  db 0x00, 0x01
 
 	hex_digits:	db "0123456789ABCDEF"
 	message:	db 0x41, 0x41, 0x00
@@ -20,53 +24,65 @@ jmp word 0x0000:start
 	mrep:		db 0x00, 0x00
 	idx:		db 0x00, 0x00
 
-scroll_up:
-	; Scroll using rep movsw
-	mov dx, 0
-
-	; Src  = ds:si
-	; Dest = es:di
-	mov ax, 0xB800
-	mov ds, ax
-	mov es, ax
-
-	; Forward direction
-	cld
-
-	; Src and dest pointers
-	mov di, lwidth_terminal
-	mov si, di
-	add si, lwidth_terminal
-
-repeat:
-	; Numbers of moves
-	; Each letter is 2 bytes
-	mov cx, rchlf
-	rep movsw
-
-	; Counter less than
-	; Row count (25) -1
-	inc dx
-	cmp dx, rcount_terminal
-
-	add di, lwidth_terminal
-	add si, lwidth_terminal
-
-	je repeat
-
-	; Clearl last line
+newline:
+	push dx
 	push ax
+	push cx
+
+	xor dx, dx
+	; dx:ax / cx
+	mov ax, curr_terminal
+	mov cx, lwidth_terminal
+	div cx
+
+	; Substract filled line part
+	; from the line width
+	push ax
+	mov  ax, lwidth_terminal
+	sub  ax, dx
+	push dx
+	mov  dx, ax
+
 	mov ax, 0x20
-	
-	mov di, si
-	inc di
-	inc di
 
-	rep stosb
+newline_fill:
+	cmp dx, 0
+	je after_fill
 
+	call write_char
+	sub dx
+	jmp newline_fill
+
+after_fill:
 	pop ax
+	mov dx, full_terminal
+	cmp ax, dx
+	jne newline_ret
+
+	mov word[curr_terminal], 0
+scroll_line:
+	mov ax, [read_terminal_src]
+	mov si, ax
+	mov ax, vga_text_base
+	
+	mov ds, ax
+	mov al, [ds:si]
+	call write_char
+	inc si
+	inc si
+
+	cmp
+	
+	pop dx
+	
 
 	mov word[curr_terminal], 3838
+
+newline_ret:
+	pop cx
+	pop ax
+	pop dx
+
 	ret
 
 write_char:
