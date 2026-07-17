@@ -45,7 +45,7 @@ newline:
 	mov  dx, ax
 
 	mov ax, 0x20
-
+	pop dx
 newline_fill:
 	cmp dx, 0
 	je after_fill
@@ -58,7 +58,7 @@ after_fill:
 	pop ax
 	mov dx, full_terminal
 	cmp ax, dx
-	jne newline_ret
+	je newline_ret
 
 	mov word[curr_terminal], 0
 
@@ -116,6 +116,10 @@ write_char:
 putchar:
 	call full_check
 
+	push ax
+	mov ax, 58
+	call write_char
+	pop ax
 	; check if character is new line
 	cmp  al, 0x0A
 	je   putchar_newline
@@ -146,13 +150,65 @@ full_check_cdn:
 puts:
 	; check if character is EOS
 	mov al, [ds:si]
-	cmp al, 0
+
 	inc si
+	cmp al, 0
 	je puts_end
 	call putchar
 	jmp puts
 puts_end:
+	push ax
+	mov ax, 65
+	call write_char
+	mov ax, 83
+	call write_char
+	mov ax, 83
+	call write_char
+	pop ax
+	call newline
 	ret
+
+index_line:
+	mov al, [idx+1]
+	and ax, 0x00f0
+	shr al, 4
+	mov si, hex_digits
+	add si, ax
+	mov al, [si]
+	call putchar
+
+	mov al, [idx+1]
+	and ax, 0x000f
+	mov si, hex_digits
+	add si, ax
+	mov al, [si]
+	call putchar
+
+	mov al, [idx]
+	and ax, 0x00f0
+	shr al, 4
+	mov si, hex_digits
+	add si, ax
+	mov al, [si]
+	call putchar
+
+	mov al, [idx]
+	and ax, 0x000f
+	mov si, hex_digits
+	add si, ax
+	mov al, [si]
+	call putchar
+
+	mov al, ':'
+	call putchar
+
+	mov al, ' '
+	call putchar
+
+	inc word [idx]
+
+	ret
+
 start:
 	mov ah, 0x00 ; Set video mode
 	mov al, 0x03 ; Set text mode
@@ -163,32 +219,32 @@ start:
 	mov si, message
 	call puts
 
-	mov si, message
-	call puts
-	mov si, message
-	call puts
-	mov si, message4
-	call puts
-repeats:
-	inc word [mrep]
-	; bug here
-
-	; call index_line
-
 	mov si, message2
 	call puts
-	cmp word [mrep], 25
-	jl repeats
-
-	mov si, message
-	call puts
-	 mov si, message3
-	 call puts
-	 mov si, message4
-	 call puts
-	L0:
-	pause
-	jmp L0
+;	mov si, message
+;	call puts
+;	mov si, message4
+;	call puts
+;repeats:
+;	inc word [mrep]
+;	; bug here
+;
+;	; call index_line
+;
+;	mov si, message2
+;	call puts
+;	cmp word [mrep], 25
+;	jl repeats
+;
+;	mov si, message
+;	call puts
+;	 mov si, message3
+;	 call puts
+;	 mov si, message4
+;	 call puts
+;	L0:
+;	pause
+;	jmp L0
 
 times 510-($-$$) db 0
 db 0x55
