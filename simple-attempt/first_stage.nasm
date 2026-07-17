@@ -8,6 +8,7 @@ jmp word 0x0000:start
 	lwidth_terminal	equ 0x0A0
 	rcount_terminal equ 0x019
 	full_terminal	equ lwidth_terminal*rcount_terminal
+	subfull_terminal equ full_terminal-lwidth_terminal
 
 	line_counter:	db 0x00, 0x01
 	curr_terminal:	db 0x00, 0x00
@@ -50,7 +51,7 @@ newline_fill:
 	je after_fill
 
 	call write_char
-	sub dx
+	dec dx
 	jmp newline_fill
 
 after_fill:
@@ -60,21 +61,31 @@ after_fill:
 	jne newline_ret
 
 	mov word[curr_terminal], 0
+
 scroll_line:
+	mov ax, vga_text_base
+	mov ds, ax
+scr:
 	mov ax, [read_terminal_src]
 	mov si, ax
-	mov ax, vga_text_base
-	
-	mov ds, ax
 	mov al, [ds:si]
-	call write_char
-	inc si
-	inc si
 
-	cmp
-	
+	mov bx, [read_terminal_dest]
+	mov si, bx
+
+	call write_char
+
+	inc [read_terminal_src]
+	inc [read_terminal_src]
+	inc [read_terminal_dest]
+	inc [read_terminal_dest]
+
+	inc si
+	inc si
+	cmp si, subfull_terminal
+	jl  scr
+
 	pop dx
-	
 
 	mov word[curr_terminal], 3838
 
@@ -117,18 +128,18 @@ putchar_newline:
 full_check:
 	; Check if terminal is full
 	; Div uses ax for dividend
-	push al
+	push ax
 	mov ax, [curr_terminal]
 	mov cx, full_terminal
 	mov dx, 0
 	div cx
 	cmp ax, cx
 	jbe full_check_cdn
-	call scroll_up
+	call scroll_line
 	; Bring back al
 full_check_cdn:
 	xor ax, ax
-	pop al
+	pop ax
 	ret
 ; Puts take pointer and prints until eo string add newline at the end
 ; Pointer to string at [ds:si]
@@ -140,50 +151,8 @@ puts:
 	je puts_end
 	call putchar
 	jmp puts
-puts__end:
+puts_end:
 	ret
-
-index_line:
-	mov al, [idx+1]
-	and ax, 0x00f0
-	shr al, 4
-	mov si, hex_digits
-	add si, ax
-	mov al, [si]
-	call putchar
-
-	mov al, [idx+1]
-	and ax, 0x000f
-	mov si, hex_digits
-	add si, ax
-	mov al, [si]
-	call putchar
-
-	mov al, [idx]
-	and ax, 0x00f0
-	shr al, 4
-	mov si, hex_digits
-	add si, ax
-	mov al, [si]
-	call putchar
-
-	mov al, [idx]
-	and ax, 0x000f
-	mov si, hex_digits
-	add si, ax
-	mov al, [si]
-	call putchar
-
-	mov al, ':'
-	call putchar
-
-	mov al, ' '
-	call putchar
-
-	inc word [idx]
-
-	ret
-
 start:
 	mov ah, 0x00 ; Set video mode
 	mov al, 0x03 ; Set text mode
@@ -194,6 +163,12 @@ start:
 	mov si, message
 	call puts
 
+	mov si, message
+	call puts
+	mov si, message
+	call puts
+	mov si, message4
+	call puts
 repeats:
 	inc word [mrep]
 	; bug here
