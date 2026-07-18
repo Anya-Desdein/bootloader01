@@ -8,9 +8,7 @@ jmp word 0x0000:start
 	lwidth_terminal	equ 0x0A0
 	rcount_terminal equ 0x019
 	full_terminal	equ lwidth_terminal*rcount_terminal
-	subfull_terminal equ full_terminal-lwidth_terminal
 
-	line_counter:	db 0x00, 0x01
 	curr_terminal:	db 0x00, 0x00
 
 	read_terminal_src:  db 0x00, 0xA0
@@ -60,29 +58,32 @@ after_fill:
 	cmp ax, dx
 	je newline_ret
 
-	mov word[curr_terminal], 0
-
 scroll_line:
-	mov ax, vga_text_base
-	mov ds, ax
-scr:
-	mov ax, [read_terminal_src]
-	mov si, ax
-	mov al, [ds:si]
-
-	mov bx, [read_terminal_dest]
-	mov si, bx
-
-	call write_char
-
-	mov ax, [read_terminal_src]
-	cmp ax, subfull_terminal
-	jl  scr
-
-	pop dx
-
-	mov word[curr_terminal], 3838
-
+	mov word[curr_terminal], 0
+;
+;	mov ax, vga_text_base
+;	mov ds, ax
+;scr:
+;	mov ax, [read_terminal_src]
+;	mov si, ax
+;	mov al, [ds:si]
+;	mov bx, [read_terminal_dest]
+;	mov si, bx
+;
+;	call write_char
+;
+;	mov [read_terminal_dest], si
+;	mov [read_terminal_src],  si
+;	add [read_terminal_src],  25
+;
+;	mov ax, [read_terminal_src]
+;	cmp ax, full_terminal
+;	jl  scr
+;
+;	pop dx
+;
+;	mov word[curr_terminal], 3838
+;
 newline_ret:
 	pop cx
 	pop ax
