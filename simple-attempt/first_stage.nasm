@@ -18,8 +18,8 @@ jmp word 0x0000:start
 	read_terminal_ctr:  db 0x00, 0x01
 
 	hex_digits:	db "0123456789ABCDEF"
-	message:	db 0x41, 0x41, 0x00
-	message2:	db 0x69, 0x42, 0x00
+	message:	db 0x41, 0x42, 0x00
+	message2:	db 0x69, 0x48, 0x00
 	message3:	db 0x3F, 0x47, 0x00
 	message4:	db 0x49, 0x48, 0x00
 	mrep:		db 0x00, 0x00
@@ -32,10 +32,11 @@ newline:
 
 	xor dx, dx
 	; dx:ax / cx
-	mov ax, curr_terminal
+	mov ax, [curr_terminal]
 	mov cx, lwidth_terminal
 	div cx
 
+	call write_char
 	; Substract filled line part
 	; from the line width
 	push ax
@@ -56,7 +57,8 @@ newline_fill:
 
 after_fill:
 	pop ax
-	mov dx, full_terminal
+	mov dx, rcount_terminal
+	dec dx
 	cmp ax, dx
 	je newline_ret
 
@@ -75,14 +77,8 @@ scr:
 
 	call write_char
 
-	inc [read_terminal_src]
-	inc [read_terminal_src]
-	inc [read_terminal_dest]
-	inc [read_terminal_dest]
-
-	inc si
-	inc si
-	cmp si, subfull_terminal
+	mov ax, [read_terminal_src]
+	cmp ax, subfull_terminal
 	jl  scr
 
 	pop dx
@@ -116,10 +112,6 @@ write_char:
 putchar:
 	call full_check
 
-	push ax
-	mov ax, 58
-	call write_char
-	pop ax
 	; check if character is new line
 	cmp  al, 0x0A
 	je   putchar_newline
@@ -157,14 +149,6 @@ puts:
 	call putchar
 	jmp puts
 puts_end:
-	push ax
-	mov ax, 65
-	call write_char
-	mov ax, 83
-	call write_char
-	mov ax, 83
-	call write_char
-	pop ax
 	call newline
 	ret
 
@@ -219,7 +203,7 @@ start:
 	mov si, message
 	call puts
 
-	mov si, message2
+	mov si, message3
 	call puts
 ;	mov si, message
 ;	call puts
