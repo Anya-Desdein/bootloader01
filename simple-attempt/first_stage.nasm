@@ -36,23 +36,21 @@ newline:
 	mov cx, lwidth_terminal
 	div cx
 
-	call write_char
 	; Substract filled line part
 	; from the line width
 	push ax
 	mov  ax, lwidth_terminal
 	sub  ax, dx
-	push dx
 	mov  dx, ax
 
 	mov ax, 0x20
-	pop dx
 newline_fill:
+	mov ax, dx
+	call write_char
 	cmp dx, 0
 	je after_fill
-
-	call write_char
-	dec dx
+	
+	sub dx, 2
 	jmp newline_fill
 
 after_fill:
