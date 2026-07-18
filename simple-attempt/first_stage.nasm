@@ -17,8 +17,8 @@ jmp word 0x0000:start
 
 	hex_digits:	db "0123456789ABCDEF"
 	message:	db 0x41, 0x42, 0x00
-	message2:	db 0x69, 0x48, 0x00
-	message3:	db 0x3F, 0x47, 0x00
+	message2:	db 0x11, 0x45, 0x00
+	message3:	db 0x99, 0xF6, 0x00
 	message4:	db 0x49, 0x48, 0x00
 	mrep:		db 0x00, 0x00
 	idx:		db 0x00, 0x00
@@ -43,10 +43,9 @@ newline:
 
 	mov ax, 0x20
 newline_fill:
-	mov ax, dx
 	call write_char
-	cmp dx, 0
-	je after_fill
+	cmp dx, 2
+	jle after_fill
 	
 	sub dx, 2
 	jmp newline_fill
@@ -54,12 +53,11 @@ newline_fill:
 after_fill:
 	pop ax
 	mov dx, rcount_terminal
-	dec dx
 	cmp ax, dx
-	je newline_ret
+	jg newline_ret
 
 scroll_line:
-	mov word[curr_terminal], 0
+	mov word[curr_terminal], 248
 ;
 ;	mov ax, vga_text_base
 ;	mov ds, ax
