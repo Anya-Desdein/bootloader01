@@ -18,10 +18,10 @@ jmp word 0x0000:start
 	read_terminal_ctr:  db 0x00, 0x01
 
 ;	hex_digits:	db "0123456789ABCDEF"
-	message:	db 0x41, 0x42, 0x00
+	message:	db 0x41, 0x41, 0x00
 	message2:	db 0x11, 0x45, 0x00
-	message3:	db 0x99, 0xF6, 0x00
-	message4:	db 0x49, 0x48, 0x00
+	message3:	db 0x42, 0x42, 0x00
+	message4:	db 0x43, 0x43, 0x00
 	mrep:		db 0x00, 0x00
 	idx:		db 0x00, 0x00
 
@@ -34,7 +34,7 @@ newline:
 	; dx:ax / cx
 	mov ax, [curr_terminal]
 	mov cx, lwidth_terminal
-	div ax
+	div cx
 
 	mov [newline_curr_linecnt], ax
 
@@ -43,23 +43,20 @@ newline:
 	mov  ax, lwidth_terminal
 	sub  ax, dx
 	mov  dx, ax
-	
+
 newline_fill:
 	mov ax, 0x00
 
 	call write_char
 	cmp dx, 2
-	jle after_fill
+	je after_fill
 	
 	sub dx, 2
 	jmp newline_fill
 
 after_fill:
-	mov [newline_curr_linecnt], ax
-
-	mov dx, rcount_terminal
-	cmp ax, dx
-	jg newline_ret
+	cmp [newline_curr_linecnt], rcount_terminal
+	jl newline_ret
 
 scroll_line:
 	mov word[curr_terminal], 248
@@ -124,19 +121,10 @@ putchar_newline:
 	ret
 
 full_check:
-	push ax
-	; Check if terminal is full
-	; Div uses ax for dividend
-	mov ax, [curr_terminal]
-	mov cx, full_terminal
-	xor dx, dx
-	div cx
+	mov bx, [curr_terminal]
+	cmp bx, full_terminal
 
-	mov bx, ax
-	pop ax
-
-	cmp bx, cx
-	jbe full_check_cdn
+	jb full_check_cdn
 	call scroll_line
 full_check_cdn:
 	ret
@@ -166,28 +154,20 @@ start:
 	call puts
 	mov si, message4
 	call puts
+
+	mov cx, 20
+.L1:
 	mov si, message3
 	call puts
-;repeats:
-;	inc word [mrep]
-;	; bug here
-;
-;	; call index_line
-;
-;	mov si, message2
-;	call puts
-;	cmp word [mrep], 25
-;	jl repeats
-;
-;	mov si, message
-;	call puts
-;	 mov si, message3
-;	 call puts
-;	 mov si, message4
-;	 call puts
-;	L0:
-;	pause
-;	jmp L0
+	dec cx
+	jne .L1
+
+	mov cx, 4
+.L2:
+	mov si, message4
+	call puts
+	dec cx
+	jne .L2
 
 times 510-($-$$) db 0
 db 0x55
