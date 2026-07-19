@@ -11,11 +11,13 @@ jmp word 0x0000:start
 
 	curr_terminal:	db 0x00, 0x00
 
+	newline_curr_linecnt db 0x00, 0x00
+
 	read_terminal_src:  db 0x00, 0xA0
 	read_terminal_dest: db 0x00, 0x00
 	read_terminal_ctr:  db 0x00, 0x01
 
-	hex_digits:	db "0123456789ABCDEF"
+;	hex_digits:	db "0123456789ABCDEF"
 	message:	db 0x41, 0x42, 0x00
 	message2:	db 0x11, 0x45, 0x00
 	message3:	db 0x99, 0xF6, 0x00
@@ -34,15 +36,17 @@ newline:
 	mov cx, lwidth_terminal
 	div cx
 
+	mov [newline_curr_linecnt], ax
+
 	; Substract filled line part
 	; from the line width
-	push ax
 	mov  ax, lwidth_terminal
 	sub  ax, dx
 	mov  dx, ax
-
-	mov ax, 0x20
+	
 newline_fill:
+	mov ax, 0x00
+
 	call write_char
 	cmp dx, 2
 	jle after_fill
@@ -51,7 +55,8 @@ newline_fill:
 	jmp newline_fill
 
 after_fill:
-	pop ax
+	mov [newline_curr_linecnt], ax
+
 	mov dx, rcount_terminal
 	cmp ax, dx
 	jg newline_ret
@@ -119,20 +124,19 @@ putchar_newline:
 	ret
 
 full_check:
+	push ax
 	; Check if terminal is full
 	; Div uses ax for dividend
-	push ax
 	mov ax, [curr_terminal]
 	mov cx, full_terminal
 	mov dx, 0
 	div cx
+	mov bx, ax
+	pop ax
 	cmp ax, cx
 	jbe full_check_cdn
 	call scroll_line
-	; Bring back al
 full_check_cdn:
-	xor ax, ax
-	pop ax
 	ret
 ; Puts take pointer and prints until eo string add newline at the end
 ; Pointer to string at [ds:si]
@@ -149,47 +153,6 @@ puts_end:
 	call newline
 	ret
 
-index_line:
-	mov al, [idx+1]
-	and ax, 0x00f0
-	shr al, 4
-	mov si, hex_digits
-	add si, ax
-	mov al, [si]
-	call putchar
-
-	mov al, [idx+1]
-	and ax, 0x000f
-	mov si, hex_digits
-	add si, ax
-	mov al, [si]
-	call putchar
-
-	mov al, [idx]
-	and ax, 0x00f0
-	shr al, 4
-	mov si, hex_digits
-	add si, ax
-	mov al, [si]
-	call putchar
-
-	mov al, [idx]
-	and ax, 0x000f
-	mov si, hex_digits
-	add si, ax
-	mov al, [si]
-	call putchar
-
-	mov al, ':'
-	call putchar
-
-	mov al, ' '
-	call putchar
-
-	inc word [idx]
-
-	ret
-
 start:
 	mov ah, 0x00 ; Set video mode
 	mov al, 0x03 ; Set text mode
@@ -199,13 +162,10 @@ start:
 	mov ds, si
 	mov si, message
 	call puts
-
+	mov si, message4
+	call puts
 	mov si, message3
 	call puts
-;	mov si, message
-;	call puts
-;	mov si, message4
-;	call puts
 ;repeats:
 ;	inc word [mrep]
 ;	; bug here
