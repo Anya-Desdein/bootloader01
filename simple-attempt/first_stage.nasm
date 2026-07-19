@@ -34,7 +34,7 @@ newline:
 	; dx:ax / cx
 	mov ax, [curr_terminal]
 	mov cx, lwidth_terminal
-	div cx
+	div ax
 
 	mov [newline_curr_linecnt], ax
 
@@ -129,11 +129,13 @@ full_check:
 	; Div uses ax for dividend
 	mov ax, [curr_terminal]
 	mov cx, full_terminal
-	mov dx, 0
+	xor dx, dx
 	div cx
+
 	mov bx, ax
 	pop ax
-	cmp ax, cx
+
+	cmp bx, cx
 	jbe full_check_cdn
 	call scroll_line
 full_check_cdn:
@@ -158,7 +160,7 @@ start:
 	mov al, 0x03 ; Set text mode
 	int 0x10
 
-	mov si, 0
+	xor si, si
 	mov ds, si
 	mov si, message
 	call puts
