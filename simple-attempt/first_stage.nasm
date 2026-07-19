@@ -8,14 +8,14 @@ jmp word 0x0000:start
 	lwidth_terminal	equ 0x0A0
 	rcount_terminal equ 0x019
 	full_terminal	equ lwidth_terminal*rcount_terminal
+	sf_terminal	equ lwidth_terminal*rcount_terminal
 
 	curr_terminal:	db 0x00, 0x00
 
 	newline_curr_linecnt db 0x00, 0x00
 
-	read_terminal_src:  db 0x00, 0xA0
+	read_terminal_src:  db 0x00, 0x9E
 	read_terminal_dest: db 0x00, 0x00
-	read_terminal_ctr:  db 0x00, 0x01
 
 ;	hex_digits:	db "0123456789ABCDEF"
 	message:	db 0x41, 0x41, 0x00
@@ -59,31 +59,34 @@ after_fill:
 	jl newline_ret
 
 scroll_line:
-	mov word[curr_terminal], 248
-;
-;	mov ax, vga_text_base
-;	mov ds, ax
-;scr:
-;	mov ax, [read_terminal_src]
-;	mov si, ax
-;	mov al, [ds:si]
-;	mov bx, [read_terminal_dest]
-;	mov si, bx
-;
-;	call write_char
-;
-;	mov [read_terminal_dest], si
-;	mov [read_terminal_src],  si
-;	add [read_terminal_src],  25
-;
-;	mov ax, [read_terminal_src]
-;	cmp ax, full_terminal
-;	jl  scr
-;
-;	pop dx
-;
-;	mov word[curr_terminal], 3838
-;
+	mov ax, vga_text_base
+	mov ds, ax
+
+	mov [read_terminal_src], 158
+	mov [read_terminal_dest], 0
+scr:
+	mov ax, [read_terminal_src]
+	mov si, ax
+
+	call write_char
+	mov al, [ds:si]
+	mov bx, [read_terminal_dest]
+	mov si, bx
+	call write_char
+
+	mov ax, si
+	mov [read_terminal_dest], si
+	mov [read_terminal_src],  si
+	add [read_terminal_src],  25
+
+	mov ax, [read_terminal_src]
+	cmp ax, sf_terminal
+	jl  scr
+
+	pop dx
+
+	mov word[curr_terminal], 3838
+
 newline_ret:
 	pop cx
 	pop ax
