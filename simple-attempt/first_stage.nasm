@@ -8,22 +8,17 @@ jmp word 0x0000:start
 	lwidth_terminal	equ 0x0A0
 	rcount_terminal equ 0x019
 	full_terminal	equ lwidth_terminal*rcount_terminal
-	sf_terminal	equ lwidth_terminal*rcount_terminal
-
+	last_char	equ full_terminal-4
 	curr_terminal:	db 0x00, 0x00
-
-	newline_curr_linecnt db 0x00, 0x00
 
 	read_terminal_src:  db 0x00, 0x9E
 	read_terminal_dest: db 0x00, 0x00
 
 ;	hex_digits:	db "0123456789ABCDEF"
-	message:	db 0x41, 0x41, 0x00
+	message:	db 0x41, 0x42, 0x00
 	message2:	db 0x11, 0x45, 0x00
-	message3:	db 0x42, 0x42, 0x00
-	message4:	db 0x43, 0x43, 0x00
-	mrep:		db 0x00, 0x00
-	idx:		db 0x00, 0x00
+	message3:	db 0x43, 0x44, 0x00
+	message4:	db 0x45, 0x46, 0x00
 
 newline:
 	push dx
@@ -36,56 +31,43 @@ newline:
 	mov cx, lwidth_terminal
 	div cx
 
-	mov [newline_curr_linecnt], ax
-
 	; Substract filled line part
 	; from the line width
-	mov  ax, lwidth_terminal
-	sub  ax, dx
-	mov  dx, ax
+	mov bx, ax
+	add bx, 1
+	mul bx, lwidth_terminal
+	mov word[curr_terminal], bx
 
-newline_fill:
-	mov ax, 0x00
-
-	call write_char
-	cmp dx, 2
-	je after_fill
-	
-	sub dx, 2
-	jmp newline_fill
-
-after_fill:
-	cmp [newline_curr_linecnt], rcount_terminal
+	cmp bx, last_char
 	jl newline_ret
 
 scroll_line:
 	mov ax, vga_text_base
-	mov ds, ax
+	mov fs, ax
 
-	mov [read_terminal_src], 158
-	mov [read_terminal_dest], 0
+	mov word[read_terminal_src], lwidth_terminal
+	mov word[read_terminal_dest], 0
 scr:
-	mov ax, [read_terminal_src]
-	mov si, ax
-
-	call write_char
-	mov al, [ds:si]
+	mov di, [read_terminal_src]
+	mov al, [fs:di]
+	
 	mov bx, [read_terminal_dest]
-	mov si, bx
-	call write_char
+	mov di, bx
+	mov [fs:di], al
+	inc di
+	mov al, 0x0c
+	mov [fs:di], al
 
-	mov ax, si
-	mov [read_terminal_dest], si
-	mov [read_terminal_src],  si
-	add [read_terminal_src],  25
+	add [read_terminal_src],  2
+	add [read_terminal_dest], 2
 
 	mov ax, [read_terminal_src]
-	cmp ax, sf_terminal
-	jl  scr
+	cmp ax, last_char
+	jl scr
 
 	pop dx
 
-	mov word[curr_terminal], 3838
+	mov word[curr_terminal], 3840
 
 newline_ret:
 	pop cx
