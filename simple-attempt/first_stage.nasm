@@ -8,17 +8,20 @@ jmp word 0x0000:start
 	lwidth_terminal	equ 0x0A0
 	rcount_terminal equ 0x019
 	full_terminal	equ lwidth_terminal*rcount_terminal
-	last_char	equ full_terminal-4
-	curr_terminal:	db 0x00, 0x00
+	last_char	equ full_terminal-2
+	last_line:	equ 3840
 
-	read_terminal_src:  db 0x00, 0x9E
-	read_terminal_dest: db 0x00, 0x00
+	curr_terminal:		db 0x00, 0x00
 
-;	hex_digits:	db "0123456789ABCDEF"
-	message:	db 0x41, 0x42, 0x00
-	message2:	db 0x11, 0x45, 0x00
-	message3:	db 0x43, 0x44, 0x00
-	message4:	db 0x45, 0x46, 0x00
+	read_terminal_src:	db 0x00, 0x9E
+	read_terminal_dest:	db 0x00, 0x00
+
+;	hex_digits:		db "0123456789ABCDEF"
+	message:		db 0x41, 0x42, 0x00
+	message2:		db 0x11, 0x45, 0x00
+	message3:		db 0x43, 0x44, 0x00
+	message4:		db 0x46, 0x47, 0x00
+	message5:		db 0x45, 0x48, 0x00
 
 newline:
 	push dx
@@ -65,9 +68,21 @@ scr:
 	cmp ax, last_char
 	jl scr
 
-	pop dx
+	mov ax, vga_text_base
+	mov es, ax
+	mov ax, lwidth_terminal
+	mov bx, 2
+	div bx
+	mov cx, ax
 
-	mov word[curr_terminal], 3840
+	mov ax, last_line
+	mov di, ax
+	mov ax, 0
+	cld
+	rep stosw
+
+	mov word[curr_terminal], last_line
+
 
 newline_ret:
 	pop cx
@@ -153,6 +168,13 @@ start:
 	call puts
 	dec cx
 	jne .L2
+
+	mov cx, 4
+.L3:
+	mov si, message5
+	call puts
+	dec cx
+	jne .L3
 
 times 510-($-$$) db 0
 db 0x55
