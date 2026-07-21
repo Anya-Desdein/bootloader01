@@ -140,6 +140,13 @@ puts_end:
 	ret
 
 start:
+;	Setup stack
+	cli
+	xor ax, ax
+	mov ss, ax
+	mov sp, 0x7C00
+	sti
+
 	mov ah, 0x00 ; Set video mode
 	mov al, 0x03 ; Set text mode
 	int 0x10
