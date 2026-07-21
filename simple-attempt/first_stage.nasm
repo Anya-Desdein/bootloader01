@@ -151,6 +151,12 @@ start:
 	mov si, message4
 	call puts
 
+	mov ah, 0x02
+	mov bh, 0x00
+	mov dh, 0x19
+	mov dl, 0x00
+	int 0x10
+
 	mov cx, 20
 .L1:
 	mov si, message3
