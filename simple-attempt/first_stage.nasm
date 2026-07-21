@@ -17,11 +17,7 @@ jmp word 0x0000:start
 	read_terminal_dest:	db 0x00, 0x00
 
 ;	hex_digits:		db "0123456789ABCDEF"
-	message:		db 0x41, 0x42, 0x00
-	message2:		db 0x11, 0x45, 0x00
-	message3:		db 0x43, 0x44, 0x00
-	message4:		db 0x46, 0x47, 0x00
-	message5:		db 0x45, 0x48, 0x00
+	message:		db "Hello World", 0x00
 
 newline:
 	push dx
@@ -151,40 +147,17 @@ start:
 	mov al, 0x03 ; Set text mode
 	int 0x10
 
-	xor si, si
-	mov ds, si
-	mov si, message
-	call puts
-	mov si, message4
-	call puts
-
+;	Disable cursor
 	mov ah, 0x02
 	mov bh, 0x00
 	mov dh, 0x19
 	mov dl, 0x00
 	int 0x10
 
-	mov cx, 20
-.L1:
-	mov si, message3
+	xor si, si
+	mov ds, si
+	mov si, message
 	call puts
-	dec cx
-	jne .L1
-
-	mov cx, 4
-.L2:
-	mov si, message4
-	call puts
-	dec cx
-	jne .L2
-
-	mov cx, 4
-.L3:
-	mov si, message5
-	call puts
-	dec cx
-	jne .L3
-
 times 510-($-$$) db 0
 db 0x55
 db 0xaa
