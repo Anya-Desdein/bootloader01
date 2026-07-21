@@ -9,7 +9,7 @@ jmp word 0x0000:start
 	rcount_terminal equ 0x019
 	full_terminal	equ lwidth_terminal*rcount_terminal
 	last_char	equ full_terminal-2
-	last_line:	equ 3840
+	last_line:	equ full_terminal-lwidth_terminal
 
 	curr_terminal:		db 0x00, 0x00
 
@@ -70,6 +70,7 @@ scr:
 
 	mov ax, vga_text_base
 	mov es, ax
+	xor dx, dx
 	mov ax, lwidth_terminal
 	mov bx, 2
 	div bx
@@ -82,7 +83,6 @@ scr:
 	rep stosw
 
 	mov word[curr_terminal], last_line
-
 
 newline_ret:
 	pop cx
