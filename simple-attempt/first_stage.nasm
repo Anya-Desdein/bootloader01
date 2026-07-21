@@ -16,7 +16,6 @@ jmp word 0x0000:start
 	read_terminal_src:	db 0x00, 0x9E
 	read_terminal_dest:	db 0x00, 0x00
 
-;	hex_digits:		db "0123456789ABCDEF"
 	message:		db "Hello World", 0x00
 
 newline:
