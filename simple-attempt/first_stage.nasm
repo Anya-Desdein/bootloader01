@@ -70,11 +70,7 @@ scr:
 
 	mov ax, vga_text_base
 	mov es, ax
-	xor dx, dx
-	mov ax, lwidth_terminal
-	mov bx, 2
-	div bx
-	mov cx, ax
+	mov cx, lwidth_terminal/2
 
 	mov ax, last_line
 	mov di, ax
