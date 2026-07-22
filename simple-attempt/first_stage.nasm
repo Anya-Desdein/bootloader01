@@ -17,6 +17,27 @@ jmp word 0x0000:start
 	read_terminal_dest:	db 0x00, 0x00
 
 	message:		db "Hello World", 0x00
+	stage2_err_msg:		db "Failed to load stage2", 0x00
+
+DAP:
+	db 0x10
+	db 0x00
+	dw 0x01
+	dw 0x8000
+	dw 0x0000
+	dq 0x01
+	jc stage2_err
+
+stage2_err:
+	xor si, si
+	mov ds, si
+	mov si, stage2_err_msg
+	call puts
+	
+err0:
+	jmp err0
+
+
 
 newline:
 	push dx
@@ -157,6 +178,9 @@ start:
 	mov ds, si
 	mov si, message
 	call puts
+	
+	
+
 times 510-($-$$) db 0
 db 0x55
 db 0xaa
