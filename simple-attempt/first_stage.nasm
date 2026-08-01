@@ -1,6 +1,8 @@
 [bits 16]
 
-[org 0x7c00]
+SECTION .text
+global start
+
 jmp word 0x0000:start
 	align 2
 	vga_text_base	equ 0xB800
@@ -36,7 +38,6 @@ stage2_err:
 	
 err0:
 	jmp err0
-
 
 
 newline:
