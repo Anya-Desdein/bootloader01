@@ -21,14 +21,15 @@ jmp word 0x0000:start
 	message:		db "Hello World", 0x00
 	stage2_err_msg:		db "Failed to load stage2", 0x00
 
+
+	align 4
 DAP:
 	db 0x10
 	db 0x00
-	dw 0x01
+	dw __stage2_sectors
 	dw 0x8000
 	dw 0x0000
 	dq 0x01
-	jc stage2_err
 
 stage2_err:
 	xor si, si
@@ -180,7 +181,14 @@ start:
 	mov si, message
 	call puts
 	
-	
+;	Load stage2
+	extern __stage2_sectors
+;	Read sectors
+	mov ah, 42h
+	mov si, DAP
+	int 13h
+	jc stage2_err
+
 
 times 510-($-$$) db 0
 db 0x55
