@@ -1,5 +1,15 @@
 [bits 16]
 
+struc DAP_str:
+	.size:		 resb	1 ; size of DAP (always 16 bytes)
+	.reserved:	 resb	1 ; reserved
+	.count:		 resw	1 ; number of sectors to read
+	.buffer_offset:	 resw	1 ; offset of buffer (lower bits)
+	.buffer_segment: resw	1 ; segment of buffer (upper 16 bits)
+	.lba_low:	 resd	1 ; lba aaddr (lower 32 bits)
+	.lba_high:	 resd	1 ; lba aaddr (higher 32 bits)
+endstruc
+
 SECTION .text
 global start
 
@@ -21,15 +31,17 @@ jmp word 0x0000:start
 	message:		db "Hello World", 0x00
 	stage2_err_msg:		db "Failed to load stage2", 0x00
 
-
 	align 4
 DAP:
-	db 0x10
-	db 0x00
-	dw __stage2_sectors
-	dw 0x8000
-	dw 0x0000
-	dq 0x01
+	istruc DAP_str
+	at .size,		db 0x10
+	at .reserved,		db 0x00
+	at .count,		dw __stage2_sectors
+	at .buffer_offset,	dw 0x8000
+	at .buffer_segment,	dw 0x0000
+	at .lba_low,		dd 0x00000000
+	at .lba_high,		dd 0x00000000
+	iend
 
 stage2_err:
 	xor si, si
@@ -184,8 +196,14 @@ start:
 ;	Load stage2
 	extern __stage2_sectors
 ;	Read sectors
-	mov ah, 42h
+	xor ax, ax
+	mov ds, ax
+
+	;Todo: learn the drive number
+	;adjust the dl
+	mov dl, 1 ; drive number
 	mov si, DAP
+	mov ah, 42h
 	int 13h
 	jc stage2_err
 
