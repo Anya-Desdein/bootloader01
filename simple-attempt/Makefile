@@ -1,7 +1,7 @@
 all: floppy.bin
 
 floppy.bin: first_stage.o second_stage.o dynamic_stage2.ld
-	ld -m elf_i386 -T dynamic_stage2.ld first_stage.o second_stage.o floppy.bin --oformat binary
+	ld -m elf_i386 -T dynamic_stage2.ld first_stage.o second_stage.o -o floppy.bin --oformat binary
 
 first_stage.o: first_stage.nasm
 	nasm -f elf32 first_stage.nasm -o first_stage.o

@@ -35,6 +35,6 @@ SECTIONS
 	}
 	
 	/* stage2 size in sectors! */
-	__s2_size = __s2_end - __s2_start
-	__s2_sectors = (__s2_size + 511)/512
+	__s2_size = __s2_end - __s2_start;
+	__s2_sectors = (__s2_size + 511)/512;
 }
