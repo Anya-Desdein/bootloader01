@@ -1,19 +1,23 @@
 [bits 16]
 
-struc DAP_str:
-	.size:		 resb	1 ; size of DAP (always 16 bytes)
-	.reserved:	 resb	1 ; reserved
-	.count:		 resw	1 ; number of sectors to read
-	.buffer_offset:	 resw	1 ; offset of buffer (lower bits)
-	.buffer_segment: resw	1 ; segment of buffer (upper 16 bits)
-	.lba_low:	 resd	1 ; lba aaddr (lower 32 bits)
-	.lba_high:	 resd	1 ; lba aaddr (higher 32 bits)
-endstruc
-
 SECTION .text
 global start
 
 jmp word 0x0000:start
+
+struc DAP_str
+	.size:		 resb	1 ; size of DAP (always 16 bytes)
+	.reserved:	 resb	1 ; reserved
+	.count:		 resw	1 ; number of sectors to read
+	; This is where data will be written
+	.buffer_offset:	 resw	1 ; offset of buffer (lower bits)
+	.buffer_segment: resw	1 ; segment of buffer (upper 16 bits)
+	; Boot sector
+	.lba_low:	 resd	1 ; lba aaddr (lower 32 bits)
+	.lba_high:	 resd	1 ; lba aaddr (higher 32 bits)
+endstruc
+
+
 	align 2
 	vga_text_base	equ 0xB800
 
@@ -31,15 +35,17 @@ jmp word 0x0000:start
 	message:		db "Hello World", 0x00
 	stage2_err_msg:		db "Failed to load stage2", 0x00
 
+	boot_drive:		db 0x00
+
 	align 4
 DAP:
 	istruc DAP_str
 	at .size,		db 0x10
 	at .reserved,		db 0x00
-	at .count,		dw __stage2_sectors
-	at .buffer_offset,	dw 0x8000
+	at .count,		dw __s2_sectors
+	at .buffer_offset,	dw 0x0500
 	at .buffer_segment,	dw 0x0000
-	at .lba_low,		dd 0x00000000
+	at .lba_low,		dd 0x00000001
 	at .lba_high,		dd 0x00000000
 	iend
 
@@ -170,6 +176,8 @@ puts_end:
 	ret
 
 start:
+	mov [boot_drive], dl
+
 ;	Setup stack
 	cli
 	xor ax, ax
@@ -194,18 +202,19 @@ start:
 	call puts
 	
 ;	Load stage2
-	extern __stage2_sectors
+	extern __s2_sectors
+	extern __s2_start
 ;	Read sectors
 	xor ax, ax
 	mov ds, ax
 
-	;Todo: learn the drive number
-	;adjust the dl
-	mov dl, 1 ; drive number
+	mov dl, [boot_drive] ; drive number
 	mov si, DAP
 	mov ah, 42h
 	int 13h
 	jc stage2_err
+
+	jmp 0x0000:__s2_start
 
 
 times 510-($-$$) db 0
