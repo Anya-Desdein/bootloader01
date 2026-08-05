@@ -38,6 +38,7 @@ endstruc
 	boot_drive:		db 0x00
 
 	align 4
+	; mov to stack to stop overflowing 512
 DAP:
 	istruc DAP_str
 	at .size,		db 0x10
