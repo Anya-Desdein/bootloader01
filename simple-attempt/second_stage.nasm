@@ -10,9 +10,9 @@ start2:
 	mov edi, 0xB8000 ; VGA addr
 
 
+	mov esi, msg_s2
 print_msg_s2:
 ;	Print msg!
-	mov esi, msg_s2
 	mov al, [esi]
 	cmp al, 0
 	je msge

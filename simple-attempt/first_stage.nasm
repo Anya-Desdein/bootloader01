@@ -19,7 +19,7 @@ jmp word 0x0000:start
 	read_terminal_src:	db 0x00, 0x9E
 	read_terminal_dest:	db 0x00, 0x00
 
-	message:		db "S1", 0x00
+	message:		db "Loaded S1!", 0x00
 	stage2_err_msg:		db "S2 LOAD ERR", 0x00
 
 	boot_drive:		db 0x00
