@@ -5,19 +5,6 @@ global start
 
 jmp word 0x0000:start
 
-struc DAP_str
-	.size:		 resb	1 ; size of DAP (always 16 bytes)
-	.reserved:	 resb	1 ; reserved
-	.count:		 resw	1 ; number of sectors to read
-	; This is where data will be written
-	.buffer_offset:	 resw	1 ; offset of buffer (lower bits)
-	.buffer_segment: resw	1 ; segment of buffer (upper 16 bits)
-	; Boot sector
-	.lba_low:	 resd	1 ; lba aaddr (lower 32 bits)
-	.lba_high:	 resd	1 ; lba aaddr (higher 32 bits)
-endstruc
-
-
 	align 2
 	vga_text_base	equ 0xB800
 
@@ -32,23 +19,10 @@ endstruc
 	read_terminal_src:	db 0x00, 0x9E
 	read_terminal_dest:	db 0x00, 0x00
 
-	message:		db "Hello World", 0x00
-	stage2_err_msg:		db "Failed to load stage2", 0x00
+	message:		db "S1", 0x00
+	stage2_err_msg:		db "S2 LOAD ERR", 0x00
 
 	boot_drive:		db 0x00
-
-	align 4
-	; mov to stack to stop overflowing 512
-DAP:
-	istruc DAP_str
-	at .size,		db 0x10
-	at .reserved,		db 0x00
-	at .count,		dw __s2_sectors
-	at .buffer_offset,	dw 0x0500
-	at .buffer_segment,	dw 0x0000
-	at .lba_low,		dd 0x00000001
-	at .lba_high,		dd 0x00000000
-	iend
 
 stage2_err:
 	xor si, si
@@ -209,15 +183,24 @@ start:
 	xor ax, ax
 	mov ds, ax
 
+	; DAP moved to stack
+	; because I run out of space
+	mov sp, 16
+	mov si, sp
+
+	mov byte [si],		0x10
+	mov byte [si+1],	0x00
+	mov word [si+2],	__s2_sectors
+	mov word [si+4],	0x0500
+	mov word [si+6],	0x0000
+	mov word [si+8],	0x0001
+	mov word [si+10],	0x0000
+	mov word [si+12],	0x0000
+	mov word [si+14],	0x0000
+
 	mov dl, [boot_drive] ; drive number
-	mov si, DAP
 	mov ah, 42h
 	int 13h
 	jc stage2_err
 
 	jmp 0x0000:__s2_start
-
-
-times 510-($-$$) db 0
-db 0x55
-db 0xaa
