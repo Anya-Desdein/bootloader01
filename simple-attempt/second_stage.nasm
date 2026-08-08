@@ -19,9 +19,7 @@ start2:
 	mov ss, ax
 	mov esp, 0x7C00
 
-
 	mov edi, 0x00B8000 ; VGA addr
-
 
 	mov esi, msg_s2
 print_msg_s2:
@@ -38,4 +36,4 @@ print_msg_s2:
 	jmp print_msg_s2
 
 msge:
-		
+	; Set up idt???
