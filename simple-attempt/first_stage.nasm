@@ -203,4 +203,46 @@ start:
 	int 13h
 	jc stage2_err
 
-	jmp 0x0000:__s2_start
+	cli
+	
+	; Fast A20
+	; Disables memory wrapping
+	; Enables accessing of more mem
+	mov ax, 0x2401
+	int 0x15
+
+	; NULL descriptor
+	mov word [0x7E00], 0x0000
+	mov word [0x7E02], 0x0000
+	mov word [0x7E04], 0x0000
+	mov word [0x7E06], 0x0000
+
+	; Code descriptor, (8B 0x7E00)
+	mov word [0x7E08], 0xFFFF
+	mov word [0x7E0A], 0x0000
+	mov byte [0x7E0C], 0x00
+	mov byte [0x7E0D], 0x9A
+	mov byte [0x7E0E], 0xCF
+	mov byte [0x7E0F], 0x00
+
+	; Data descriptor, (8B 0x7E10)
+	mov word [0x7E10], 0xFFFF
+	mov word [0x7E12], 0x0000
+	mov byte [0x7E14], 0x00
+	mov byte [0x7E15], 0x92
+	mov byte [0x7E16], 0xCF
+	mov byte [0x7E17], 0x00
+
+	; GDT descriptor pointer (6B, 0x7E18)
+	mov word [0x7E18], 23 ; GDT size
+	mov word [0x7E1A], 0x7E00
+	mov word [0x7E1C], 0x0000
+
+	lgdt [0x7E18] ; LGDT on pointer
+
+	; Has to be after A20 and GDT (?)
+	mov eax, cr0
+	or eax, 0x1
+	mov cr0, eax
+
+	jmp 0x08:__s2_start
