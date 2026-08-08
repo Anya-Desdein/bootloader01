@@ -2,12 +2,25 @@
 SECTION .text
 global start2
 
-jmp word 0x0000:start2
+jmp start2
 
 	msg_s2:		db "Second Stage LOADED <3", 0x00
 
 start2:
-	mov edi, 0xB8000 ; VGA addr
+	; Update all data segment registers
+	; 0x10 offset to GDT
+	mov ax, 0x10
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+
+	; Configure stack
+	mov ss, ax
+	mov esp, 0x7C00
+
+
+	mov edi, 0x00B8000 ; VGA addr
 
 
 	mov esi, msg_s2
