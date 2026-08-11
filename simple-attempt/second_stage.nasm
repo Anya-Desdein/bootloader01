@@ -46,6 +46,25 @@ print_msg_s2:
 	test edx, (1 << 29)
 	jz _leave
 
+	test edx, (1 << 20)
+	jz _leave
 
+	; Disavle 32-bit paging
+	mov eax, cr0
+	and eax, 0x7FFFFFFF
+	mov cr0, eax
 
+	mov eax, cr4
+	; Enable Physical Address Extension
+	; 64-bit memory addressing
+	or eax, (1 << 5)
+	; Enable FXSAVE/FXRSTOR
+	; Save SSE state during process switches
+	or eax, (1 << 9)
+	; Enable OSXMMEXCPT
+	; UNMASKED SIMD float exception
+	or eax, (1 << 10)
+	mov cr3, eax
+
+	; TODO: paging
 _leave:
