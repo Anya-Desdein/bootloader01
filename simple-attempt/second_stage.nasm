@@ -2,9 +2,12 @@
 SECTION .text
 global start2
 
+section .text
+	global _start2
+
 jmp start2
 
-	msg_s2:		db "Second Stage LOADED <3", 0x00
+	msg_s2:		db "Second Stage Achieved", 0x00
 
 start2:
 	; Update all data segment registers
@@ -26,7 +29,7 @@ print_msg_s2:
 ;	Print msg!
 	mov al, [esi]
 	cmp al, 0
-	je msge
+	je _leave
 
 	mov [edi], al
 	mov byte [edi + 1], 0x0B
@@ -34,6 +37,15 @@ print_msg_s2:
 	inc esi
 	add edi, 2
 	jmp print_msg_s2
+	
+	; CPUID
+	mov eax, 0x80000001 ; extended feature flags
+	cpuid
 
-msge:
-	; Set up idt???
+	; Check for long mode support
+	test edx, (1 << 29)
+	jz _leave
+
+
+
+_leave:
