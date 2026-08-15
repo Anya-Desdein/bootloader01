@@ -64,7 +64,41 @@ print_msg_s2:
 	; Enable OSXMMEXCPT
 	; UNMASKED SIMD float exception
 	or eax, (1 << 10)
+	mov cr4, eax
+
+	; Setup 4 level paging
+	; Positioned above the 1MiB
+
+	; Clear mem
+	mov edi, 0x00100000 ; Destination
+	mov ecx, 4096 ; Repeat count
+	xor eax, eax ; Operation
+	rep stosd ; Repat
+	
+	; Page table structure:
+	; PML4 0x100000
+	; PDPT 0x101000
+	; PD   0x102000
+	; PT   0x103000
+
+	; Flags:
+	; Bit 0 = Exists
+	; Bit 1 = Read/Write
+	; Bit 2 = User/Supervisor
+	; Bit 3 = Page-level write-through
+	; Bit 4 = Page-level cache disable
+	; Bit 5 = Accessed [CPU setis it to 1 automatically when it reads/writes from this page]
+	; Bit 6 = Valid only in the final PT entry, for telling if RAM has newer val than Disk
+	; Bit 7 = Page size, valid only in PML4, PDPPT, PD
+	; Bit 8 = Global flag prevents clearing TLB when switching between programs
+	; Bit 63 = No execute (NX/XD)
+	mov dword [0x00100000], 0x00101003 ; PML4 entry
+	mov dword [0x00101000], 0x00102003 ; PDPT entry
+	mov dword [0x00102000], 0x00103003 ; PD entry
+	
+	; Identity map
+
+	mov eax, 0x00100000
 	mov cr3, eax
 
-	; TODO: paging
 _leave:
