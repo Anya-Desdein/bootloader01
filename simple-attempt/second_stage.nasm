@@ -49,7 +49,7 @@ print_msg_s2:
 	test edx, (1 << 20)
 	jz _leave
 
-	; Disavle 32-bit paging
+	; Disable 32-bit paging
 	mov eax, cr0
 	and eax, 0x7FFFFFFF
 	mov cr0, eax
@@ -108,8 +108,24 @@ map:
 	add ebx, 4096	; Move to next
 	loop  map
 
-
 	mov eax, 0x00100000
 	mov cr3, eax
+
+	; Enable long mode
+	; in Extended Feature Enable Register
+	; (EFER)
+	mov ecx, 0xC0000000 ; EFER address identifier
+	rdmsr
+	or eax, (1 << 8) ; Enable long mode
+	wrmsr
+
+	; Activate paging
+	mov eax, cr0
+	or eax, (1 << 31) ; Flip the paging flag
+	mov cr0, eax
+
+	; Load 64-bit GDT and far jump
+[bits 64]
+start_long_mode:
 
 _leave:
