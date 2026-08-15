@@ -96,7 +96,18 @@ print_msg_s2:
 	mov dword [0x00101000], 0x00102003 ; PDPT entry
 	mov dword [0x00102000], 0x00103003 ; PD entry
 	
-	; Identity map
+	; Identity map for the first 2MiB
+	mov edi, 0x103000   ; Start of PT
+	mov ebx, 0x00000003 ; First entry should point to 0, 3 is flags
+
+	; ECX decreased by loop
+	mov ecx, 512	    ; Map all 512 * 4 entries
+map:
+	mov [edi], ebx
+	add edi, 8	; Page entry size
+	add ebx, 4096	; Move to next
+	loop  map
+
 
 	mov eax, 0x00100000
 	mov cr3, eax
