@@ -245,4 +245,5 @@ start:
 	or eax, 0x1
 	mov cr0, eax
 
-	jmp 0x08:__s2_start
+	extern start2
+	jmp 0x08:start2
