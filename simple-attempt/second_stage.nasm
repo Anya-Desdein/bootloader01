@@ -30,7 +30,7 @@ print_msg_s2:
 ;	Print msg!
 	mov al, [esi]
 	cmp al, 0
-	je _leave
+	je pcontinue
 
 	mov [edi], al
 	mov byte [edi + 1], 0x0B
@@ -38,7 +38,7 @@ print_msg_s2:
 	inc esi
 	add edi, 2
 	jmp print_msg_s2
-	
+pcontinue:	
 	; CPUID
 	mov eax, 0x80000001 ; extended feature flags
 	cpuid
@@ -125,11 +125,13 @@ map:
 	or eax, (1 << 31) ; Flip the paging flag
 	mov cr0, eax
 
+	mov esi, msg1
+	mov edi, 0x00B80A0
 print_msg1:
 ;	Print msg!
 	mov al, [esi]
 	cmp al, 0
-	je _leave
+	je pcontinue2
 
 	mov [edi], al
 	mov byte [edi + 1], 0x0B
@@ -137,6 +139,7 @@ print_msg1:
 	inc esi
 	add edi, 2
 	jmp print_msg1
+pcontinue2:
 	
 	; Load 64-bit GDT and far jump
 [bits 64]
