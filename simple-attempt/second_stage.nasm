@@ -115,7 +115,7 @@ map:
 	; Enable long mode
 	; in Extended Feature Enable Register
 	; (EFER)
-	mov ecx, 0xC0000000 ; EFER address identifier
+	mov ecx, 0xC0000080 ; EFER address identifier
 	rdmsr
 	or eax, (1 << 8) ; Enable long mode
 	wrmsr
