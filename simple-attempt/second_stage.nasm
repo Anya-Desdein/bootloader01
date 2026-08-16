@@ -10,6 +10,33 @@ jmp start2
 	msg_s2:		db "Second Stage Achieved", 0x00
 	msg1:		db "Hello Everynyan", 0x00
 
+	align 4
+	gdt_64:
+	; Kinda same like in 32
+	; But 64-bit entries
+	; 0-15  FFFF is the max segment size
+	; 16-31 Generally ignored ?
+	; 32-39 Ignored in my case ?
+	; 40-47 Access Byte. Privilege level, segment type, perms
+	; Like Ring 0 == 00
+	; Ring 1 == 01
+	; Ring 2 == 10
+	; Ring 3 == 11
+	; Privilege: 
+
+	; Null Descriptor
+	dq 0x0000000000000000
+
+	; Kernel Code Segment
+	dw 0xFFFF
+	dw 0x0000
+	db 0x00
+	
+
+
+	; Kernel Data Segment
+
+
 start2:
 	; Update all data segment registers
 	; 0x10 offset to GDT
@@ -134,8 +161,8 @@ print_msg1:
 	add edi, 2
 	jmp print_msg1
 pcontinue2:
-	
 	; Load 64-bit GDT and far jump
+	
 [bits 64]
 start_long_mode:
 
