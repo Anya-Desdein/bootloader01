@@ -8,6 +8,7 @@ section .text
 jmp start2
 
 	msg_s2:		db "Second Stage Achieved", 0x00
+	msg1:		db "Hello Everynyan", 0x00
 
 start2:
 	; Update all data segment registers
@@ -124,6 +125,19 @@ map:
 	or eax, (1 << 31) ; Flip the paging flag
 	mov cr0, eax
 
+print_msg1:
+;	Print msg!
+	mov al, [esi]
+	cmp al, 0
+	je _leave
+
+	mov [edi], al
+	mov byte [edi + 1], 0x0B
+	
+	inc esi
+	add edi, 2
+	jmp print_msg1
+	
 	; Load 64-bit GDT and far jump
 [bits 64]
 start_long_mode:
