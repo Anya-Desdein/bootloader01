@@ -59,12 +59,6 @@ pcontinue:
 	; Enable Physical Address Extension
 	; 64-bit memory addressing
 	or eax, (1 << 5)
-	; Enable FXSAVE/FXRSTOR
-	; Save SSE state during process switches
-	or eax, (1 << 9)
-	; Enable OSXMMEXCPT
-	; UNMASKED SIMD float exception
-	or eax, (1 << 10)
 	mov cr4, eax
 
 	; Setup 4 level paging
