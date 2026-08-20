@@ -16,13 +16,16 @@ jmp start2
 	%define S_W	(1 << 1) ; Write
 	%define F_G	(1 << 3) ; Page granularity 4 KiB
 	%define F_L	(1 << 1) ; 64-bit long mode
-	%define
-	%define
 
 	; Kernel Code Descriptor
-	istruc GDTE
-
-	iend
+	struc GDTE
+		limit_low:	resw 1
+		base_low:	resw 1
+		base_mid:	resb 1
+		access:		resb 1
+		flags_limit:	resb 1
+		base_high:	resb 1
+	endstruc
 
 
 	msg_s2:		db "Second Stage Achieved", 0x00
