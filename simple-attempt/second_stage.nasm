@@ -2,31 +2,49 @@
 SECTION .text
 global start2
 
-section .text
 	global _start2
 
 jmp start2
 	; GDT_64 Segment Flag Bits
 	%define S_P	(1 << 7) ; Present
-	%define S__DPL0	(0 << 5) ; Ring 0
+	%define S_DPL0	(0 << 5) ; Ring 0
 	%define S_S	(1 << 4) ; Code or Data descriptor
 	%define S_C	(1 << 3) ; Executable
 	%define S_D	(0 << 3) ; Non-executable
-	%define S_R	(1 << 3) ; Read
+	%define S_R	(1 << 1) ; Read
 	%define S_W	(1 << 1) ; Write
 	%define F_G	(1 << 3) ; Page granularity 4 KiB
 	%define F_L	(1 << 1) ; 64-bit long mode
 
 	; Kernel Code Descriptor
 	struc GDTE
-		limit_low:	resw 1
-		base_low:	resw 1
-		base_mid:	resb 1
-		access:		resb 1
-		flags_limit:	resb 1
-		base_high:	resb 1
+		.limit_low:	resw 1
+		.base_low:	resw 1
+		.base_mid:	resb 1
+		.access:	resb 1
+		.flags_limit:	resb 1
+		.base_high:	resb 1
 	endstruc
 
+	gdt_code:
+	istruc GDTE
+		at .limit_low,	 dw 0xFFFF
+		at .base_low,	 dw 0x0000
+		at .base_mid,	 db 0x00
+		at .access,	 db (S_P | S_DPL0 | S_S | S_C | S_R)
+		at .flags_limit, db ( ((F_G | F_L) << 4) | 0x0F)
+		at .base_high,	 db 0x00
+	iend
+	
+	gdt_data:
+	istruc GDTE
+		at .limit_low,	  dw 0xFFFF
+		at .base_low,	  dw 0x0000
+		at .base_mid,	  db 0x00
+		at .access,	  db (S_P | S_DPL0 | S_S | S_D | S_W)
+		at .flags_limit,  db ((F_G << 4) | 0x0F)
+		at .base_high,	  db 0x00
+	iend
 
 	msg_s2:		db "Second Stage Achieved", 0x00
 	msg1:		db "Hello Everynyan", 0x00
@@ -52,12 +70,8 @@ jmp start2
 	dw 0xFFFF
 	dw 0x0000
 	db 0x00
-	
-
 
 	; Kernel Data Segment
-
-
 start2:
 	; Update all data segment registers
 	; 0x10 offset to GDT
