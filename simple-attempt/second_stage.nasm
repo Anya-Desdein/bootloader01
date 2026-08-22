@@ -194,15 +194,32 @@ print_msg1:
 	inc esi
 	add edi, 2
 	jmp print_msg1
+
 pcontinue2:
 
 	; Load 64-bit GDT
 	lgdt[gdt_desc]
 	mov eax, cr0
-	or eax, (1 << 31) ; activate paging
+	or eax, (1 << 31) ; CR0.PG
 	mov cr0, eax
 	
+	; Far jump
+	jmp 0x08:start_long_mode
+
 [bits 64]
 start_long_mode:
+	
+	; Clean up data segments
+	mov ax, 0x10
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ss, ax
+
+	mov rdi, 0xB8000
+	mov ah, 0x0c
+	mov al, "A"
+	mov [rdi], ax
 
 _leave:
