@@ -8,7 +8,7 @@ jmp start2
 	; GDT_64 Segment Flag Bits
 	%define S_P	(1 << 7) ; Present
 	%define S_DPL0	(0 << 5) ; Ring 0
-	%define S_S	(1 << 4) ; Code or Data descriptor
+	%define S_S	(1 << 4) ; Code or Data descriptor | 0 is system
 	%define S_C	(1 << 3) ; Executable
 	%define S_D	(0 << 3) ; Non-executable
 	%define S_R	(1 << 1) ; Read
@@ -25,6 +25,21 @@ jmp start2
 		.flags_limit:	resb 1
 		.base_high:	resb 1
 	endstruc
+
+	; Kinda same like in 32
+	; But 64-bit entries
+	; 0-15  FFFF is the max segment size
+	; 16-31 Generally ignored ?
+	; 32-39 Ignored in my case ?
+	; 40-47 Access Byte. Privilege level, segment type, perms
+	; Like Ring 0 == 00
+	; Ring 1 == 01
+	; Ring 2 == 10
+	; Ring 3 == 11
+
+	align 4
+	gdt_null:
+		dq 0
 
 	gdt_code:
 	istruc GDTE
@@ -45,33 +60,17 @@ jmp start2
 		at .flags_limit,  db ((F_G << 4) | 0x0F)
 		at .base_high,	  db 0x00
 	iend
+	gdt_end:
+
+	; Size 2 | Base Addr 4
+	gdt_desc:
+		dw (gdt_end - gdt_null - 1)
+		dd gdt_null
 
 	msg_s2:		db "Second Stage Achieved", 0x00
 	msg1:		db "Hello Everynyan", 0x00
-
-	align 4
 	gdt_64:
-	; Kinda same like in 32
-	; But 64-bit entries
-	; 0-15  FFFF is the max segment size
-	; 16-31 Generally ignored ?
-	; 32-39 Ignored in my case ?
-	; 40-47 Access Byte. Privilege level, segment type, perms
-	; Like Ring 0 == 00
-	; Ring 1 == 01
-	; Ring 2 == 10
-	; Ring 3 == 11
-	; Privilege: 
 
-	; Null Descriptor
-	dq 0x0000000000000000
-
-	; Kernel Code Segment
-	dw 0xFFFF
-	dw 0x0000
-	db 0x00
-
-	; Kernel Data Segment
 start2:
 	; Update all data segment registers
 	; 0x10 offset to GDT
@@ -152,7 +151,7 @@ pcontinue:
 	mov dword [0x00100000], 0x00101003 ; PML4 entry
 	mov dword [0x00101000], 0x00102003 ; PDPT entry
 	mov dword [0x00102000], 0x00103003 ; PD entry
-	
+
 	; Identity map for the first 2MiB
 	mov edi, 0x103000   ; Start of PT
 	mov ebx, 0x00000003 ; First entry should point to 0, 3 is flags
@@ -196,7 +195,12 @@ print_msg1:
 	add edi, 2
 	jmp print_msg1
 pcontinue2:
-	; Load 64-bit GDT and far jump
+
+	; Load 64-bit GDT
+	lgdt[gdt_desc]
+	mov eax, cr0
+	or eax, (1 << 31) ; activate paging
+	mov cr0, eax
 	
 [bits 64]
 start_long_mode:
