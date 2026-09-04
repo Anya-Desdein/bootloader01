@@ -37,9 +37,8 @@ SECTIONS
 		__s2_end = .;
 	}
 
-	.
 	/* Kernel */
-	.kernel 0x00104000 : AT(LOADADDR(.stage2) + SIZEOF(.stage2)){
+	.kernel 0x00104000 : AT(LOADADDR(.stage2) + SIZEOF(.stage2)) {
 		__k_start = .;
 		kernel.o(.text)
 		kernel.o(.data)
