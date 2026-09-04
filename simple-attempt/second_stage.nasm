@@ -222,4 +222,6 @@ start_long_mode:
 	mov al, "A"
 	mov [rdi], ax
 
+	mov rax, 0x00104000
+	jmp rax
 _leave:
